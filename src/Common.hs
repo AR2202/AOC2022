@@ -10,6 +10,7 @@ module Common
   , splitLinesAndWords
   , list2tuple
   , readTuple
+  , splitCommas
   ) where
 
 import           Data.List.Split
@@ -45,3 +46,6 @@ list2tuple (x:y:zs) = (x, y)
 
 readTuple :: (Read a, Read b) => (String, String) -> (a, b)
 readTuple (x, y) = (read x, read y)
+
+splitCommas :: String -> IO [[String]]
+splitCommas filename = map (splitOn ",") . lines <$> loadInput filename

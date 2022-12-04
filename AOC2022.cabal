@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3147a86214e7886b01052359b8bc68c99c1ad3675428471b3f1e7b21309148a1
+-- hash: 0215bd995c4086ff3571bd8006dd79dfaf2761dec56098956218eeb3e0e0f6e7
 
 name:           AOC2022
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
       Day01
       Day02
       Day03
+      Day04
       Lib
   other-modules:
       Paths_AOC2022
