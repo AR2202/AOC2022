@@ -11,8 +11,10 @@ module Common
   , list2tuple
   , readTuple
   , splitCommas
+  , capitalize
   ) where
 
+import           Data.Char       (toUpper)
 import           Data.List.Split
 
 dir :: String
@@ -49,3 +51,7 @@ readTuple (x, y) = (read x, read y)
 
 splitCommas :: String -> IO [[String]]
 splitCommas filename = map (splitOn ",") . lines <$> loadInput filename
+
+capitalize :: String -> String
+capitalize ""     = ""
+capitalize (x:xs) = toUpper x : xs
