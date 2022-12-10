@@ -1,15 +1,26 @@
 module Day10
   ( day10A
+  , solve10b
   ) where
 
 import           Common
-import           Data.List (foldl', nub, scanl')
+import           Data.List       (foldl', nub, scanl1)
+import           Data.List.Split (chunksOf)
 
 ----Types-------
 data Instructions
   = Addx Int
   | Noop
   deriving (Show, Read, Eq)
+
+data PixelState
+  = Lit
+  | Dark
+  deriving (Read, Eq)
+
+instance Show PixelState where
+  show Lit  = "@"
+  show Dark = "."
 
 -----parse input-----
 parseInstructions :: String -> IO [Instructions]
@@ -37,3 +48,26 @@ solve10a filename =
 
 day10A :: IO Int
 day10A = solve10a "Day10.txt"
+
+--PArt2-----
+currentX :: [Int] -> [Int]
+currentX = scanl1 (+)
+
+inSprite :: Int -> Int -> Bool
+inSprite clockcycle pos = (horizontal >= pos - 1) && (horizontal <= pos + 1)
+  where
+    horizontal = clockcycle `mod` 40
+
+lit :: [Int] -> [Bool]
+lit = zipWith inSprite [0 ..]
+
+bool2pixelstate :: Bool -> PixelState
+bool2pixelstate True  = Lit
+bool2pixelstate False = Dark
+
+solve10b :: String -> IO ()
+solve10b filename =
+  chunksOf 40 .
+  concatMap (show . bool2pixelstate) . lit . currentX . (1 :) . instructionsToX <$>
+  parseInstructions filename >>=
+  mapM_ putStrLn
