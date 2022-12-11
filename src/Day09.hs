@@ -18,6 +18,11 @@ data Directions
   | L
   | D
   | U
+  | S
+  | RU
+  | LU
+  | RD
+  | LD
   deriving (Show, Read, Eq)
 
 data Configuration
@@ -105,3 +110,51 @@ solve9A filename =
 
 day9A :: IO Int
 day9A = solve9A "Day09.txt"
+
+--Part 2---
+nextMove :: (Configuration, Directions) -> (Configuration, Directions)
+nextMove (Covers, R)     = (Right', S)
+nextMove (Covers, L)     = (Left', S)
+nextMove (Covers, D)     = (Down, S)
+nextMove (Covers, U)     = (Up, S)
+nextMove (Right', R)     = (Right', R)
+nextMove (Right', L)     = (Covers, S)
+nextMove (Right', D)     = (RightDown, S)
+nextMove (Right', U)     = (RightUp, S)
+nextMove (Left', R)      = (Covers, S)
+nextMove (Left', L)      = (Left', L)
+nextMove (Left', D)      = (LeftDown, S)
+nextMove (Left', U)      = (LeftUp, S)
+nextMove (Down, R)       = (RightDown, S)
+nextMove (Down, L)       = (LeftDown, S)
+nextMove (Down, D)       = (Down, D)
+nextMove (Down, U)       = (Covers, S)
+nextMove (Up, R)         = (RightUp, S)
+nextMove (Up, L)         = (LeftUp, S)
+nextMove (Up, D)         = (Covers, S)
+nextMove (Up, U)         = (Up, U)
+nextMove (LeftUp, R)     = (Up, S)
+nextMove (LeftUp, L)     = (Left', LU)
+nextMove (LeftUp, D)     = (Left', S)
+nextMove (LeftUp, U)     = (Up, LU)
+nextMove (RightUp, R)    = (Right', RU)
+nextMove (RightUp, L)    = (Up, S)
+nextMove (RightUp, D)    = (Right', S)
+nextMove (RightUp, U)    = (Up, RU)
+nextMove (LeftDown, R)   = (Down, S)
+nextMove (LeftDown, L)   = (Left', LD)
+nextMove (LeftDown, D)   = (Down, LD)
+nextMove (LeftDown, U)   = (Left', S)
+nextMove (LeftDown, LD)  = (LeftDown, LD)
+nextMove (LeftDown, LU)  = (Left', L)
+nextMove (LeftDown, RD)  = (Down, D)
+nextMove (LeftDown, RU)  = (Covers, S)
+nextMove (RightDown, R)  = (Right', RD)
+nextMove (RightDown, L)  = (Down, S)
+nextMove (RightDown, D)  = (Down, RD)
+nextMove (RightDown, U)  = (Right', S)
+nextMove (RightDown, RD) = (RightDown, RD)
+nextMove (RightDown, RU) = (Right', R)
+nextMove (RightDown, LU) = (Covers, S)
+nextMove (RightDown, LD) = (Down, D)
+nextMove (conf, S)       = (conf, S)
