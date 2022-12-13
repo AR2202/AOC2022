@@ -24,6 +24,7 @@ dependencies:
 - split
 - containers
 - vector
+- parsec
 
 ghc-options:
 - -Wall

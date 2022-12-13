@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 512de8e90b401d1e7d0cc99d0e55911908130fda8e8db353066305a86f393d88
+-- hash: 48eed98d1de5e630109b75e1dd538c285e52ff9f0ee0b525aea29015fd50b7f2
 
 name:           AOC2022
 version:        0.1.0.0
@@ -39,6 +39,7 @@ library
       Day09
       Day10
       Day11
+      Day13
       Lib
   other-modules:
       Paths_AOC2022
@@ -48,6 +49,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , parsec
     , split
     , vector
   default-language: Haskell2010
@@ -63,6 +65,7 @@ executable AOC2022-exe
       AOC2022
     , base >=4.7 && <5
     , containers
+    , parsec
     , split
     , vector
   default-language: Haskell2010
@@ -79,6 +82,7 @@ test-suite AOC2022-test
       AOC2022
     , base >=4.7 && <5
     , containers
+    , parsec
     , split
     , vector
   default-language: Haskell2010
