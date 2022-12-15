@@ -2,6 +2,7 @@ module Day14
   ( numSand
   , nums
   , solve14A
+  , solve14B
   ) where
 
 import           Common
@@ -46,6 +47,31 @@ numSand n occupied =
   case reststate occupied of
     Norest -> n
     Rest p -> numSand (n + 1) (S.insert p occupied)
+
+---Part2------
+solve14B filename =
+  numSandB 0 . S.fromList . concatMap nums <$> splitLines filename
+
+reststateB :: Occupied -> Int -> RestState
+reststateB occupied ymax = go (500, 0) occupied ymax
+  where
+    go (x, y) occupied ymax
+      | y > ymax = Rest (x, y)
+      | S.member (x, y + 1) occupied &&
+          S.member (x - 1, y + 1) occupied && S.member (x + 1, y + 1) occupied =
+        Rest (x, y)
+      | S.member (x, y + 1) occupied && S.member (x - 1, y + 1) occupied =
+        go (x + 1, y + 1) occupied ymax
+      | S.member (x, y + 1) occupied = go (x - 1, y + 1) occupied ymax
+      | otherwise = go (x, y + 1) occupied ymax
+
+numSandB :: Int -> Occupied -> Int
+numSandB n occupied = go n (S.findMax (S.map snd occupied)) occupied
+  where
+    go n ymax occupied =
+      case reststateB occupied ymax of
+        Rest (500, 0) -> n + 1
+        Rest p        -> go (n + 1) ymax (S.insert p occupied)
 
 ----Parser------
 nums :: String -> [Point]
