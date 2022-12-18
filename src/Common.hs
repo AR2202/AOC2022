@@ -12,6 +12,7 @@ module Common
   , readTuple
   , splitCommas
   , capitalize
+  , list2triple
   ) where
 
 import           Data.Char       (toUpper)
@@ -45,6 +46,9 @@ splitLinesAndWords filename = map words <$> splitLines filename
 --partial function - will fail on lists with less than 2 elements
 list2tuple :: [a] -> (a, a)
 list2tuple (x:y:zs) = (x, y)
+
+list2triple :: [a] -> (a, a, a)
+list2triple (x:y:z:zs) = (x, y, z)
 
 readTuple :: (Read a, Read b) => (String, String) -> (a, b)
 readTuple (x, y) = (read x, read y)
