@@ -1,6 +1,8 @@
-module Main (main) where
+module Main
+  ( main
+  ) where
 
-import Lib
+import           Day20
 
 main :: IO ()
-main = someFunc
+main = day20B >>= print

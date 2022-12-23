@@ -1,11 +1,31 @@
 module Day18
   ( solve18A
   , day18A
+  , User(..)
+  , createUser
+  , createList
   ) where
 
 import           Common
 import           Data.List       (sort)
 import           Data.List.Split (splitOn)
+
+data User =
+  User
+    { name   :: String
+    , friend :: User
+    }
+  deriving (Show)
+
+createUser =
+  let user1 = User "annika" user2
+      user2 = User "hugo" user1
+   in user1
+
+createList =
+  let a = 1 : b
+      b = 0 : a
+   in a
 
 ----PArt 1------
 day18A :: IO ()
