@@ -5,11 +5,15 @@ module Day24
   , input24
   , walls24
   , blizzards24
-  , solve24A
+  , day24A
+  , day24B
+  , toGoalToStartToGoal
+  , examplegoals
   ) where
 
 import           Common
-import qualified Data.Set as S
+import           Data.Maybe (fromJust, isJust)
+import qualified Data.Set   as S
 
 -----Types--------
 type Coordinate = (Int, Int)
@@ -54,7 +58,7 @@ nextBlizzardPosition (blizzardcoord, dir) walls =
     nextcoord (x, y) L    = (x - 1, y)
     nextcoord (x, y) R    = (x + 1, y)
     oppositcoord (x, y) Down = (x, maxy walls - 2)
-    oppositcoord (x, y) Up   = (x, miny walls + 1)
+    oppositcoord (x, y) Up   = (x, miny walls + 2)
     oppositcoord (x, y) R    = (minx walls + 1, y)
     oppositcoord (x, y) L    = (maxx walls - 1, y)
 
@@ -78,10 +82,7 @@ blizzardcoordinate = fst
 makeOneMove :: ValleyState -> ValleyState
 makeOneMove valleystate =
   valleystate
-    { allPaths =
-        S.filter
-          (\(coord, cost) -> coord /= finishCoord valleystate)
-          allnewpaths
+    { allPaths = allnewpaths
     , blizzardstate = newblizzardstate
     , shortestPath =
         minimumShortest (shortestPath valleystate) (shortestFinished)
@@ -104,25 +105,46 @@ makeOneMove valleystate =
                 newcoord `notElem` (map blizzardcoordinate newblizzardstate)
             ]
 
-minimumShortest Nothing Nothing   = Nothing
-minimumShortest Nothing (Just x)  = Just x
-minimumShortest (Just x) Nothing  = Just x
+minimumShortest Nothing x         = x
+minimumShortest x Nothing         = x
 minimumShortest (Just x) (Just y) = Just $ minimum [x, y]
 
 makeAllMoves :: ValleyState -> Maybe Int
 makeAllMoves valleystate
   | null (allPaths valleystate) = shortestPath valleystate
-  | shortestPath valleystate /= Nothing = shortestPath valleystate
+  | isJust (shortestPath valleystate) = shortestPath valleystate
   | otherwise = makeAllMoves (makeOneMove valleystate)
+  ---Part 2------
+
+day24B = solve24 (`toGoalToStartToGoal` [entryPoint, finishPoint])
+
+toGoalToStartToGoal :: ValleyState -> [Coordinate] -> Maybe Int
+toGoalToStartToGoal valleystate []
+  | isJust (shortestPath valleystate) = shortestPath valleystate
+  | otherwise = toGoalToStartToGoal (makeOneMove valleystate) []
+toGoalToStartToGoal valleystate (x:xs)
+  | isJust (shortestPath valleystate) =
+    toGoalToStartToGoal
+      (valleystate
+         { allPaths =
+             S.fromList
+               [(finishCoord valleystate, fromJust (shortestPath valleystate))]
+         , finishCoord = x
+         , shortestPath = Nothing
+         })
+      xs
+  | otherwise = toGoalToStartToGoal (makeOneMove valleystate) (x : xs)
 
 -----PArsing-----
-solve24A = do
+solve24 f = do
   startblizzards <- blizzards24
   startwalls <- walls24
-  let startpaths = S.fromList [entryPoint]
+  let startpaths = S.fromList [(entryPoint, 0)]
   let startstate =
         ValleyState startblizzards startpaths startwalls finishPoint Nothing
-  print $ makeAllMoves startstate
+  print $ f startstate
+
+day24A = solve24 makeAllMoves
 
 input24 =
   map swap .
@@ -143,11 +165,13 @@ toBlizzard (coord, '<') = (coord, L)
 toBlizzard (coord, '>') = (coord, R)
 
 walls24 =
-  S.fromList . (:) (2, 38) . map fst . filter (\x -> snd x == '#') <$> input24
+  S.fromList .
+  (:) (101, 0) . (:) (2, 38) . map fst . filter (\x -> snd x == '#') <$>
+  input24
 
 blizzards24 = map toBlizzard . filter (\x -> snd x /= '#') <$> input24
 
-entryPoint = ((2, 37), 0)
+entryPoint = (2, 37)
 
 finishPoint = (101, 1)
 
@@ -182,7 +206,11 @@ blizzardexample =
   , ((6, 4), L)
   ]
 
+examplegoals = [startexample, finishexample]
+
 startpathexample = S.fromList [((1, 5), 0)]
+
+startexample = (1, 5)
 
 finishexample = (6, 0)
 
@@ -216,4 +244,5 @@ wallexample =
     , (5, 5)
     , (6, 5)
     , (7, 5)
+    , (6, -1)
     ]
