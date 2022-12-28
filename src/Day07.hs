@@ -26,9 +26,14 @@ data TerminalCommand
   deriving (Show, Read, Eq)
 
 data Dir
-  = Expanded String [Dir]
-  | SimpleFile Int String
-  | Unexpanded String
+  = Expanded String Int [Dir]
+  | SimpleFile Int Int String
+  | Unexpanded String Int
+  deriving (Show, Read, Eq)
+
+data Filetype
+  = Directory
+  | JustFile
   deriving (Show, Read, Eq)
 
 ----Part1------
@@ -36,14 +41,14 @@ directorySize :: Directory -> Int
 directorySize (File i) = i
 directorySize (Dir ds) = sum $ map directorySize ds
 
-dirSize (Unexpanded s)    = 0
-dirSize (SimpleFile i s)  = i
-dirSize (Expanded s dirs) = sum $ map dirSize dirs
+dirSize (Unexpanded s id)    = 0
+dirSize (SimpleFile i id s)  = i
+dirSize (Expanded s id dirs) = sum $ map dirSize dirs
 
-dirSizes (Unexpanded s) = []
-dirSizes (SimpleFile i s) = []
-dirSizes (Expanded s dirs) =
-  dirSize (Expanded s dirs) : (concatMap dirSizes dirs)
+dirSizes (Unexpanded s id) = []
+dirSizes (SimpleFile i id s) = []
+dirSizes (Expanded s id dirs) =
+  dirSize (Expanded s id dirs) : (concatMap dirSizes dirs)
 
 ---parsing-----
 parseTerminalOutput :: String -> TerminalOutput
@@ -57,41 +62,56 @@ parseTerminalCommand " cd .." = DirUp
 parseTerminalCommand " ls"    = Ls
 parseTerminalCommand s        = DirDown (drop 4 s)
 
-executeCommand :: TerminalOutput -> (String, Int, Dir) -> (String, Int, Dir)
-executeCommand (Command DirUp) (s, i, d) = (findUpper s (i - 1) d, i - 1, d)
-executeCommand (Command Ls) (s, i, d) = (s, i, d)
-executeCommand (Command (DirDown name)) (s, i, d) = (name, i + 1, d)
-executeCommand (Filesize int name) (s, i, d) =
-  (s, i, addTo s i d (SimpleFile int name))
-executeCommand (Directoryname name) (s, i, d) =
-  (s, i, addTo s i d (Unexpanded name))
+executeCommand :: TerminalOutput -> (Int, Int, Int, Dir) -> (Int, Int, Int, Dir)
+executeCommand (Command DirUp) (id, maxid, i, d) =
+  (head $ findUpper id (i - 1) d, maxid, i - 1, d)
+executeCommand (Command Ls) (id, maxid, i, d) = (id, maxid, i, d)
+executeCommand (Command (DirDown name)) (id, maxid, i, d) =
+  (head $findId name id d, maxid, i + 1, d)
+executeCommand (Filesize int name) (id, maxid, i, d) =
+  (id, maxid + 1, i, addTo id i d (SimpleFile int (maxid + 1) name))
+executeCommand (Directoryname name) (id, maxid, i, d) =
+  (id, maxid + 1, i, addTo id i d (Unexpanded name (maxid + 1)))
 
-addTo :: String -> Int -> Dir -> Dir -> Dir
-addTo _ i (SimpleFile int name) _ = SimpleFile int name
-addTo s 0 (Unexpanded name) d
-  | name == s = Expanded name [d]
-  | otherwise = Unexpanded name
-addTo s i (Unexpanded name) d = Unexpanded name
-addTo s 0 (Expanded name dirs) d
-  | name == s = Expanded name (nub (d : dirs))
-  | otherwise = Expanded name dirs
-addTo s i (Expanded name dirs) d =
-  Expanded name (map (flip (addTo s (i - 1)) d) dirs)
+addTo :: Int -> Int -> Dir -> Dir -> Dir
+addTo _ i (SimpleFile int id name) _ = SimpleFile int id name
+addTo id 0 (Unexpanded name dirid) d
+  | id == dirid = Expanded name dirid [d]
+  | otherwise = Unexpanded name dirid
+addTo id i (Unexpanded name dirid) d = Unexpanded name dirid
+addTo id 0 (Expanded name dirid dirs) d
+  | dirid == id = Expanded name dirid (nub (d : dirs))
+  | otherwise = Expanded name dirid dirs
+addTo id i (Expanded name dirid dirs) d =
+  Expanded name dirid (map (flip (addTo id (i - 1)) d) dirs)
 
-findUpper :: String -> Int -> Dir -> String
-findUpper name i (Unexpanded _) = ""
-findUpper name i (SimpleFile _ _) = ""
-findUpper name 0 (Expanded s dirs)
-  | dirs `containsDir` name = s
-  | otherwise = ""
-findUpper name i (Expanded s dirs) = concatMap (findUpper name (i - 1)) dirs
+findUpper :: Int -> Int -> Dir -> [Int]
+findUpper id i (Unexpanded _ _) = []
+findUpper id i (SimpleFile _ _ _) = []
+findUpper id 0 (Expanded s dirid dirs)
+  | dirs `containsDir` id = [dirid]
+  | otherwise = []
+findUpper id i (Expanded s dirid dirs) = concatMap (findUpper id (i - 1)) dirs
 
-containsDir list name = name `elem` (map toName list)
+containsDir list name = name `elem` (map toId list)
 
-toName :: Dir -> String
-toName (Expanded name _)   = name
-toName (SimpleFile i name) = name
-toName (Unexpanded name)   = name
+toId :: Dir -> Int
+toId (Expanded name dirid _)   = dirid
+toId (SimpleFile i dirid name) = dirid
+toId (Unexpanded name dirid)   = dirid
+
+findId :: String -> Int -> Dir -> [Int]
+findId dirname parentId (Unexpanded _ _) = []
+findId dirname paretnId (SimpleFile _ _ _) = []
+findId dirname parentId (Expanded s dirid dirs)
+  | parentId == dirid =
+    map toId . filter (\dir -> dirName dir == dirname) $ dirs
+  | otherwise = concatMap (findId dirname parentId) dirs
+
+dirName :: Dir -> String
+dirName (Expanded name _ _)       = name
+dirName (SimpleFile i dirid name) = name
+dirName (Unexpanded name dirid)   = name
 
 input7 filename = map parseTerminalOutput . tail . lines <$> loadInput filename
 
@@ -99,13 +119,10 @@ print7 filename = parseTerminalOutput . head . lines <$> loadInput filename
 
 solve7A filename = do
   instructions <- input7 filename
-  let initial = ("/", 0, Unexpanded "/")
-  let (n, l, test) = foldl' (flip executeCommand) initial (take 20 instructions)
-  let testsize = dirSizes test
-  let (name, level, dirTree) = foldl' (flip executeCommand) initial instructions
+  let initial = (0, 0, 0, Unexpanded "/" 0)
+  let (id, maxid, level, dirTree) =
+        foldl' (flip executeCommand) initial instructions
   let dirsizes = dirSizes dirTree
   let dirsizesum = sum $ filter (<= 100000) dirsizes
-  print level
-  print dirTree
   print dirsizes
   print dirsizesum
