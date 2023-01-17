@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9c229fd8f5fb4c68f34ed67e80dfbdb4db77a1f8a878ad3524ec8fb6765d852f
+-- hash: 1284b4a0c25548f04aa431f15bd5443d3f3e0c91495a958ce2ea16fb77702d2a
 
 name:           AOC2022
 version:        0.1.0.0
@@ -46,6 +46,7 @@ library
       Day17
       Day18
       Day20
+      Day21
       Day23
       Day24
       Day25
@@ -58,6 +59,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , hmatrix
     , parsec
     , split
     , vector
@@ -74,6 +76,7 @@ executable AOC2022-exe
       AOC2022
     , base >=4.7 && <5
     , containers
+    , hmatrix
     , parsec
     , split
     , vector
@@ -91,6 +94,7 @@ test-suite AOC2022-test
       AOC2022
     , base >=4.7 && <5
     , containers
+    , hmatrix
     , parsec
     , split
     , vector
