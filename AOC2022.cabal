@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1284b4a0c25548f04aa431f15bd5443d3f3e0c91495a958ce2ea16fb77702d2a
+-- hash: e0c0ce841702e774066815072f6391c484824e7ad42a29b9fe9a1833ce0919ce
 
 name:           AOC2022
 version:        0.1.0.0
@@ -39,6 +39,7 @@ library
       Day09
       Day10
       Day11
+      Day12
       Day13
       Day14
       Day15

@@ -27,6 +27,7 @@ dependencies:
 - parsec
 - hmatrix
 
+
 ghc-options:
 - -Wall
 - -Wcompat

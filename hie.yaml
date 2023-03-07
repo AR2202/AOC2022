@@ -1,0 +1,4 @@
+cradle:
+  stack:
+    config:
+      stack.yaml: "stack.yaml"
