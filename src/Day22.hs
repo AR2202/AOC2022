@@ -1,4 +1,4 @@
-module Day22 (viewLeft, viewRight, testsequence, example22) where
+module Day22 (viewLeft, viewRight, testsequence, example22, day22a) where
 
 import Common
 import Data.List (foldl')
@@ -15,7 +15,7 @@ testsequence = Seq.fromList [1, 2, 3, 4]
 -----------------------------
 data Facing = R | L | D | U deriving (Show, Read, Eq)
 
-data Turning = Clockwise | Anticlockwise | Stay
+data Turning = Clockwise | Anticlockwise | Stay deriving (Show, Eq)
 
 type Coord = (Int, Int)
 
@@ -105,8 +105,23 @@ movefun D = moveDown
 ----------------------
 -- Parsing Input-----
 -----------------------
+solve22a filename startcoord = do
+  input <- splitOnBlankLine filename
+  let board = extractBoardWithCoords input
+  let instructions = extractInstructions $ extractSequence input
+  let endpos = makeAllMoves board startcoord instructions
+  let score = calcScore endpos
+  print score
 
-example22 = (extractBoardWithCoords <$> splitOnBlankLine "Example22.txt") >>= print
+inputStart = ((51, 1), R)
+
+exampleStart = ((9, 1), R)
+
+example22 = solve22a "Example22.txt" exampleStart
+
+day22a = solve22a "Day22.txt" inputStart
+
+example22_ = splitOnBlankLine "Example22.txt" >>= print . extractInstructions . extractSequence
 
 extractBoard = head
 
@@ -120,3 +135,18 @@ char2Tile '#' = Wall
 
 char2TilePos :: (Coord, Char) -> (Coord, Tile)
 char2TilePos (coord, c) = (coord, char2Tile c)
+
+extractInstructions :: String -> [(Int, Turning)]
+extractInstructions list = reverse $ go list "" []
+  where
+    go [] current parsed = (read current, Stay) : parsed
+    go ('R' : xs) current parsed = go xs "" ((read current, Clockwise) : parsed)
+    go ('L' : xs) current parsed = go xs "" ((read current, Anticlockwise) : parsed)
+    go (x : xs) current parsed = go xs (current ++ [x]) parsed
+
+calcScore ((col, row), facing) = 1000 * row + 4 * col + facingscore facing
+  where
+    facingscore R = 0
+    facingscore L = 2
+    facingscore D = 1
+    facingscore U = 3
