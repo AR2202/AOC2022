@@ -1,5 +1,7 @@
-module Day22 (viewLeft, viewRight, testsequence) where
+module Day22 (viewLeft, viewRight, testsequence, example22) where
 
+import Common
+import Data.List (foldl')
 import qualified Data.Map as M
 import qualified Data.Sequence as Seq
 
@@ -13,7 +15,7 @@ testsequence = Seq.fromList [1, 2, 3, 4]
 -----------------------------
 data Facing = R | L | D | U deriving (Show, Read, Eq)
 
-data Turning = Clockwise | Anticlockwise
+data Turning = Clockwise | Anticlockwise | Stay
 
 type Coord = (Int, Int)
 
@@ -35,6 +37,7 @@ turn U Clockwise = R
 turn U Anticlockwise = L
 turn D Clockwise = L
 turn D Anticlockwise = R
+turn x Stay = x
 
 turnPosition :: Position -> Turning -> Position
 turnPosition (coord, facing) turning = (coord, turn facing turning)
@@ -86,3 +89,34 @@ moveDown board n (x, y) =
     Just FreeTile -> moveDown board (n - 1) (x, y + 1)
   where
     upmost = M.findMin $ M.filterWithKey (\k _ -> fst k == x) board
+
+makeOneMove :: Board -> Position -> (Int, Turning) -> Position
+makeOneMove board (coord, facing) (n, t) = (movefun facing board n coord, turn facing t)
+
+makeAllMoves :: Board -> Position -> [(Int, Turning)] -> Position
+makeAllMoves board = foldl' (makeOneMove board)
+
+movefun :: Facing -> (Board -> Int -> Coord -> Coord)
+movefun R = moveRight
+movefun L = moveLeft
+movefun U = moveUp
+movefun D = moveDown
+
+----------------------
+-- Parsing Input-----
+-----------------------
+
+example22 = (extractBoardWithCoords <$> splitOnBlankLine "Example22.txt") >>= print
+
+extractBoard = head
+
+extractSequence = last
+
+extractBoardWithCoords = M.fromList . map char2TilePos . filter (\x -> snd x `elem` "#.") . addCoordinates . lines . extractBoard
+
+char2Tile :: Char -> Tile
+char2Tile '.' = FreeTile
+char2Tile '#' = Wall
+
+char2TilePos :: (Coord, Char) -> (Coord, Tile)
+char2TilePos (coord, c) = (coord, char2Tile c)

@@ -14,6 +14,7 @@ module Common
     capitalize,
     list2triple,
     makeCoordinates,
+    addCoordinates,
     loadAndAddCoords,
   )
 where
