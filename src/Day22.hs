@@ -1,4 +1,4 @@
-module Day22 (viewLeft, viewRight, testsequence, example22, day22a) where
+module Day22 (example22, day22a) where
 
 import Common
 import Data.List (foldl')
@@ -105,6 +105,7 @@ movefun D = moveDown
 ----------------------
 -- Parsing Input-----
 -----------------------
+solve22a :: String -> Position -> IO ()
 solve22a filename startcoord = do
   input <- splitOnBlankLine filename
   let board = extractBoardWithCoords input
@@ -117,17 +118,17 @@ inputStart = ((51, 1), R)
 
 exampleStart = ((9, 1), R)
 
+example22 :: IO ()
 example22 = solve22a "Example22.txt" exampleStart
 
+day22a :: IO ()
 day22a = solve22a "Day22.txt" inputStart
-
-example22_ = splitOnBlankLine "Example22.txt" >>= print . extractInstructions . extractSequence
 
 extractBoard = head
 
 extractSequence = last
 
-extractBoardWithCoords = M.fromList . map char2TilePos . filter (\x -> snd x `elem` "#.") . addCoordinates . lines . extractBoard
+extractBoardWithCoords = M.fromList . map char2TilePos . filter (\x -> snd x `elem` "#.") . addCoordinates . fillToFirstLength . lines . extractBoard
 
 char2Tile :: Char -> Tile
 char2Tile '.' = FreeTile
@@ -150,3 +151,10 @@ calcScore ((col, row), facing) = 1000 * row + 4 * col + facingscore facing
     facingscore L = 2
     facingscore D = 1
     facingscore U = 3
+
+appendNSpaces :: Int -> String -> String
+appendNSpaces n list = list ++ (replicate n ' ')
+
+fillToFirstLength list = map (take n . appendNSpaces n) list
+  where
+    n = length (head list)
