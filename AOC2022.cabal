@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 643c31fa3912c191fefae5a42cd657769e13b7c0880e76b003601cc1807bd996
+-- hash: 1c94307cf7eee4f45b29567191e1aa7f257f9449e3b94e32eebcea2d35f0819d
 
 name:           AOC2022
 version:        0.1.0.0
@@ -64,6 +64,7 @@ library
     , hmatrix
     , parsec
     , split
+    , transformers
     , vector
   default-language: Haskell2010
 
@@ -81,6 +82,7 @@ executable AOC2022-exe
     , hmatrix
     , parsec
     , split
+    , transformers
     , vector
   default-language: Haskell2010
 
@@ -99,5 +101,6 @@ test-suite AOC2022-test
     , hmatrix
     , parsec
     , split
+    , transformers
     , vector
   default-language: Haskell2010

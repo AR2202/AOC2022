@@ -16,12 +16,33 @@ module Common
     makeCoordinates,
     addCoordinates,
     loadAndAddCoords,
+    readUserName',
+    main2
   )
 where
 
 import Data.Char (toUpper)
 import Data.List (transpose)
 import Data.List.Split
+import Control.Monad.Trans.Maybe
+
+main2 :: IO ()
+main2 = do
+  maybeCreds <- runMaybeT $ do
+    usr <- readUserName'
+    
+    return usr
+  case maybeCreds of
+    Nothing -> print "Couldn't login!"
+    Just u -> print u
+
+readUserName' :: MaybeT IO String
+readUserName' = MaybeT $ do
+  putStrLn "Please enter your Username!"
+  str <- getLine
+  if length str > 5
+    then return $ Just str
+    else return Nothing
 
 dir :: String
 dir = "input/"

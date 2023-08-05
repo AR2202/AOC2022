@@ -1,40 +1,42 @@
 module Day11
-  ( example11
-  , turn
-  , monkeyround
-  , monkeyroundWithCount
-  , example11Count
-  , nRoundsWithCount
-  , solve11A
-  , day11
-  ) where
+  ( example11,
+    turn,
+    monkeyround,
+    monkeyroundWithCount,
+    example11Count,
+    nRoundsWithCount,
+    solve11A,
+    solve11B,
+    day11,
+  )
+where
 
-import           Common
-import           Data.List     (foldl', foldl1, sort)
-import           Data.Sequence (Seq (..), (<|), (><), (|>))
+import Common
+import Data.List (foldl', foldl1, sort)
+import Data.Sequence (Seq (..), (<|), (><), (|>))
 import qualified Data.Sequence as Seq
-import qualified Data.Vector   as V
+import qualified Data.Vector as V
 
---Types----
-data Monkey =
-  Monkey
-    { monkeynumber :: Int
-    , items        :: Seq.Seq Int
-    , operations   :: Int -> Int
-    , test         :: Int -> Bool
-    , nextTrue     :: Int
-    , nextFalse    :: Int
-    }
+-- Types----
+data Monkey = Monkey
+  { monkeynumber :: Int,
+    items :: Seq.Seq Int,
+    operations :: Int -> Int,
+    test :: Int -> Bool,
+    nextTrue :: Int,
+    nextFalse :: Int
+  }
 
 instance Show Monkey where
   show monkey =
-    "Monkeynumber: " ++
-    show (monkeynumber monkey) ++
-    " items: " ++
-    show (items monkey) ++
-    " Next Monkey if Test true: " ++
-    show (nextTrue monkey) ++
-    " Next Monkey if Test false: " ++ show (nextFalse monkey)
+    "Monkeynumber: "
+      ++ show (monkeynumber monkey)
+      ++ " items: "
+      ++ show (items monkey)
+      ++ " Next Monkey if Test true: "
+      ++ show (nextTrue monkey)
+      ++ " Next Monkey if Test false: "
+      ++ show (nextFalse monkey)
 
 type MonkeyChain = V.Vector Monkey
 
@@ -54,16 +56,16 @@ testItem testfun iftrue iffalse worrylevel =
 divisibleBy n x = x `mod` n == 0
 
 throwItem item from to monkeychain =
-  monkeychain V.//
-  [ (from, monkeyfrom {items = Seq.drop 1 (items monkeyfrom)})
-  , (to, monkeyto {items = items monkeyto |> item})
-  ]
+  monkeychain
+    V.// [ (from, monkeyfrom {items = Seq.drop 1 (items monkeyfrom)}),
+           (to, monkeyto {items = items monkeyto |> item})
+         ]
   where
     monkeyfrom = monkeychain V.! from
     monkeyto = monkeychain V.! to
 
-processItem :: Int -> MonkeyChain -> MonkeyChain
-processItem monkeynumber monkeychain =
+processItem :: (Int -> Int) -> Int -> MonkeyChain -> MonkeyChain
+processItem adjustWorryfun monkeynumber monkeychain =
   throwItem
     adjusteditem
     monkeynumber
@@ -76,43 +78,46 @@ processItem monkeynumber monkeychain =
     t = nextTrue current
     f = nextFalse current
     adjusteditem =
-      (adjustWorry . inspectItem operation) $ Seq.index (items current) 0
+      (adjustWorryfun . inspectItem operation) $ Seq.index (items current) 0
 
-turn :: Int -> MonkeyChain -> MonkeyChain
-turn monkeynumber monkeychain
+turn :: (Int -> Int) -> Int -> MonkeyChain -> MonkeyChain
+turn adjustWorryfun monkeynumber monkeychain
   | Seq.null (items (monkeychain V.! monkeynumber)) = monkeychain
-  | otherwise = turn monkeynumber (processItem monkeynumber monkeychain)
+  | otherwise = turn adjustWorryfun monkeynumber (processItem adjustWorryfun monkeynumber monkeychain)
 
 turnWithCount ::
-     Int -> (MonkeyChain, V.Vector Int) -> (MonkeyChain, V.Vector Int)
-turnWithCount monkeynumber (monkeychain, numturns)
+  (Int -> Int) -> Int -> (MonkeyChain, V.Vector Int) -> (MonkeyChain, V.Vector Int)
+turnWithCount adjustWorryfun monkeynumber (monkeychain, numturns)
   | Seq.null (items (monkeychain V.! monkeynumber)) = (monkeychain, numturns)
   | otherwise =
-    turnWithCount
-      monkeynumber
-      ( processItem monkeynumber monkeychain
-      , V.accum (+) numturns [(monkeynumber, 1)])
+      turnWithCount
+        adjustWorryfun
+        monkeynumber
+        ( processItem adjustWorryfun monkeynumber monkeychain,
+          V.accum (+) numturns [(monkeynumber, 1)]
+        )
 
-monkeyround :: MonkeyChain -> MonkeyChain
-monkeyround monkeychain =
-  foldl' (flip turn) monkeychain [0 .. V.length monkeychain - 1]
+monkeyround :: (Int -> Int) -> MonkeyChain -> MonkeyChain
+monkeyround adjustWorryfun monkeychain =
+  foldl' (flip (turn adjustWorryfun)) monkeychain [0 .. V.length monkeychain - 1]
 
 monkeyroundWithCount ::
-     (MonkeyChain, V.Vector Int) -> (MonkeyChain, V.Vector Int)
-monkeyroundWithCount (monkeychain, counts) =
+  (Int -> Int) -> (MonkeyChain, V.Vector Int) -> (MonkeyChain, V.Vector Int)
+monkeyroundWithCount adjustWorryfun (monkeychain, counts) =
   foldl'
-    (flip turnWithCount)
+    (flip (turnWithCount adjustWorryfun))
     (monkeychain, counts)
     [0 .. V.length monkeychain - 1]
 
-nRoundsWithCount :: Int -> MonkeyChain -> V.Vector Int
-nRoundsWithCount n monkeychain =
+nRoundsWithCount :: (Int -> Int) -> Int -> MonkeyChain -> V.Vector Int
+nRoundsWithCount adjustWorryfun n monkeychain =
   snd $
-  iterate
-    monkeyroundWithCount
-    (monkeychain, V.fromList $ replicate (V.length monkeychain) 0) !!
-  n
+    iterate
+      (monkeyroundWithCount adjustWorryfun)
+      (monkeychain, V.fromList $ replicate (V.length monkeychain) 0)
+      !! n
 
+-- this is a bit of a hack - I was too lazy to implement the parser
 monkey0 = Monkey 0 (Seq.fromList [79, 98]) (* 19) (divisibleBy 23) 2 3
 
 monkey1 = Monkey 1 (Seq.fromList [54, 65, 75, 74]) (+ 6) (divisibleBy 19) 2 0
@@ -128,7 +133,7 @@ example11Count = (example11, V.fromList [0, 0, 0, 0])
 
 solve11A monkeylist =
   (product . take 2 . reverse . sort . V.toList) $
-  nRoundsWithCount 20 monkeylist
+    nRoundsWithCount adjustWorry 20 monkeylist
 
 m0 =
   Monkey 0 (Seq.fromList [52, 60, 85, 69, 75, 75]) (* 17) (divisibleBy 13) 6 7
@@ -156,3 +161,12 @@ m6 = Monkey 6 (Seq.fromList [94, 86, 76, 67]) (+ 1) (divisibleBy 11) 5 2
 m7 = Monkey 7 (Seq.fromList [57]) (+ 2) (divisibleBy 17) 6 2
 
 day11 = V.fromList [m0, m1, m2, m3, m4, m5, m6, m7]
+
+-- Part 2 - chinese remainder theorem to the rescue
+lcmOfPrimes = 17 * 11 * 3 * 5 * 2 * 19 * 7 * 13
+
+manageWorry i = i `mod` lcmOfPrimes
+
+solve11B monkeylist =
+  (product . take 2 . reverse . sort . V.toList) $
+    nRoundsWithCount manageWorry 10000 monkeylist

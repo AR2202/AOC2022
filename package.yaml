@@ -26,6 +26,7 @@ dependencies:
 - vector
 - parsec
 - hmatrix
+- transformers
 
 
 ghc-options:
